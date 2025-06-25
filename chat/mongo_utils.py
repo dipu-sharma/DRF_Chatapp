@@ -14,3 +14,7 @@ def get_messages_collection():
 def get_rooms_collection():
     db = get_mongodb_connection()
     return db['rooms']
+
+def get_direct_messages_collection():
+    db = get_mongodb_connection()
+    return db['dm_message']

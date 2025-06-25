@@ -40,17 +40,21 @@ class UserCreateView(generics.CreateAPIView):
 
     def create(self, request, *args, **kwargs):
         response = super().create(request, *args, **kwargs)
-        
         if response.status_code == status.HTTP_201_CREATED:
             user = User.objects.get(username=request.data['username'])
+
+            user.is_active = True
+            user.save()
+
+            print(f"DEBUG: Created user {user.username}, active={user.is_active}, password={user.password}")
+
             refresh = RefreshToken.for_user(user)
-            
             response.data['tokens'] = {
                 'refresh': str(refresh),
                 'access': str(refresh.access_token),
             }
-        
         return response
+
 
 class UserListView(generics.ListAPIView):
     queryset = User.objects.all()
@@ -67,15 +71,30 @@ class RoomCreateView(generics.CreateAPIView):
         
         rooms_collection = get_rooms_collection()
         room_data = serializer.validated_data.copy()
-        
-        room_data['created_by'] = request.user.username
-        room_data['created_at'] = datetime.now()
-        result = rooms_collection.insert_one(room_data)
-        room_data['_id'] = str(result.inserted_id)
+        participants = sorted(room_data.get("participants", []))
+        existing_room = rooms_collection.find_one({
+            "participants": {"$all": participants, "$size": len(participants)}
+        })
 
-        room_data['created_at'] = room_data['created_at'].isoformat()
-        
-        return Response(room_data, status=status.HTTP_201_CREATED)
+        if existing_room:
+            # Convert ObjectId and datetime for JSON serialization
+            existing_room["_id"] = str(existing_room["_id"])
+            if isinstance(existing_room.get("created_at"), datetime):
+                existing_room["created_at"] = existing_room["created_at"].isoformat()
+            return Response(
+                {"message": "Room already exists", "result": existing_room},
+                status=status.HTTP_200_OK
+            )
+
+        # No existing room — create new one
+        room_data["created_by"] = request.user.username
+        room_data["created_at"] = datetime.now()
+
+        result = rooms_collection.insert_one(room_data)
+        room_data["_id"] = str(result.inserted_id)
+        room_data["created_at"] = room_data["created_at"].isoformat()
+
+        return Response({"message": "Room create successfully", 'result': room_data}, status=status.HTTP_201_CREATED)
 
 class MessageCreateView(generics.CreateAPIView):
     serializer_class = MessageSerializer
@@ -141,14 +160,15 @@ class MessageHistoryView(generics.GenericAPIView):
         query["timestamp"] = {"$gte": start, "$lte": end}
 
         messages_collection = get_messages_collection()
-        messages_cursor = messages_collection.find(query).sort("timestamp", -1)
+        messages_cursor = messages_collection.find(query).sort("timestamp", 1)
         messages = list(messages_cursor)
-
-        # Format and group messages
         grouped = defaultdict(list)
         now = datetime.now()
         today = now.date()
         yesterday = today - timedelta(days=1)
+
+        if not messages:
+            return Response({"results": []})
 
         for msg in messages:
             msg['_id'] = str(msg['_id'])
@@ -166,15 +186,12 @@ class MessageHistoryView(generics.GenericAPIView):
                 group_key = msg_date.strftime("%d-%m-%Y")
 
             grouped[group_key].append(msg)
-
-        # Optional pagination: flatten all messages if needed
         all_messages = []
         for date_key in grouped:
             all_messages.extend(grouped[date_key])
 
         page = self.paginate_queryset(all_messages)
         if page is not None:
-            # Re-group paginated results
             paginated_grouped = defaultdict(list)
             for msg in page:
                 ts = datetime.fromisoformat(msg['timestamp'])
