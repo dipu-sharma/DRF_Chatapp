@@ -92,7 +92,7 @@ DATABASES = {
     }
 }
 MONGODB_SETTINGS = {
-    'host': "mongodb+srv://dipus:Aae4j4KweuEvel5O@djangochatapp.fgclbbj.mongodb.net/chat_db?retryWrites=true&w=majority",
+    'host': "mongodb+srv://dipus:12345@djangochatapp.fgclbbj.mongodb.net/?retryWrites=true&w=majority&appName=djangochatapp",
     'db': 'chat_db',
     'connect': False,
     'connectTimeoutMS': 30000,
