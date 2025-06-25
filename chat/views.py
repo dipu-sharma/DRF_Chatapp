@@ -111,7 +111,7 @@ class MessageHistoryView(generics.ListAPIView):
     
     def get(self, request, *args, **kwargs):
         room_id = request.query_params.get('room_id')
-        start_date = request.query_params.get('start_date')
+        # start_date = request.query_params.get('start_date')
         # end_date = request.query_params.get('end_date')
 
         # query = {"room_id": room_id}

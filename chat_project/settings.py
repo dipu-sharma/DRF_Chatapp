@@ -92,8 +92,12 @@ DATABASES = {
     }
 }
 MONGODB_SETTINGS = {
-    'host': "mongodb+srv://:@djangochatapp.fgclbbj.mongodb.net/?retryWrites=true&w=majority&appName=djangochatapp" ,
+    'host': "mongodb+srv://dipus:Aae4j4KweuEvel5O@djangochatapp.fgclbbj.mongodb.net/chat_db?retryWrites=true&w=majority",
     'db': 'chat_db',
+    'connect': False,
+    'connectTimeoutMS': 30000,
+    'socketTimeoutMS': 30000,
+    'ssl': True,
 }
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
