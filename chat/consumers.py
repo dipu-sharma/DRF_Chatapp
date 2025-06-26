@@ -48,6 +48,8 @@ class BaseChatConsumer(AsyncWebsocketConsumer):
 
 class RoomChatConsumer(BaseChatConsumer):
     async def connect(self):
+
+        print('Request________________', self)
         token_key = self.get_token_from_query(self.scope['query_string'].decode())
         user = await self.get_user_from_token(token_key)
 

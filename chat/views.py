@@ -119,7 +119,7 @@ class MessageCreateView(generics.CreateAPIView):
             f'chat_{room_id}',
             {
                 'type': 'chat_message',
-                'message': message['content'],
+                'message': message['message'],
                 'sender': message['sender'],
                 'timestamp': str(message['timestamp'])
             }

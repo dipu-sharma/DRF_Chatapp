@@ -22,12 +22,12 @@ class UserSerializer(serializers.ModelSerializer):
 
 class MessageSerializer(serializers.Serializer):
     room_id = serializers.CharField()
-    content = serializers.CharField()
+    message = serializers.CharField()
     # sender = serializers.CharField()
 
 class RoomSerializer(serializers.Serializer):
     _id = serializers.CharField(read_only=True)
-    name = serializers.CharField()
+    type = serializers.CharField()
     participants = serializers.ListField(child=serializers.CharField())
     created_by = serializers.CharField(read_only=True)
     created_at = serializers.DateTimeField(read_only=True)
